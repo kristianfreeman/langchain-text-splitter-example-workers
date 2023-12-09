@@ -1,15 +1,23 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
+import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
+import { Hono } from "hono";
 
-export default {
-	async fetch(request, env, ctx) {
-		return new Response('Hello World!');
-	},
-};
+import template from "./template.html";
+
+const app = new Hono();
+
+app.get("/", (c) => c.html(template));
+
+app.post("/", async (c) => {
+  const splitter = new RecursiveCharacterTextSplitter({
+		// Customizable options for the splitter
+    // chunkSize: 10,
+    // chunkOverlap: 1,
+  });
+
+  const text = await c.req.text();
+  const output = await splitter.createDocuments([text]);
+
+  return c.json(output);
+});
+
+export default app;
